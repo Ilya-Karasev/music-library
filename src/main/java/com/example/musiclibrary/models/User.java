@@ -1,43 +1,88 @@
 package com.example.musiclibrary.models;
+
 import jakarta.persistence.*;
-import org.hibernate.annotations.Cascade;
-import java.util.HashSet;
-import java.util.Set;
+
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity {
-    private String username;
-    private String pass;
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
-    @Cascade({org.hibernate.annotations.CascadeType.MERGE, org.hibernate.annotations.CascadeType.REMOVE})
-    protected Set<PlayList> playList;
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
-    @Cascade({org.hibernate.annotations.CascadeType.MERGE, org.hibernate.annotations.CascadeType.REMOVE})
-    protected Set<Subscription> subscription;
-    public User(String username, String pass) {
-        this.username = username;
-        this.pass = pass;
-        playList = new HashSet<PlayList>();
-        subscription = new HashSet<Subscription>();
+    private String surName;
+    private String firstName;
+    private String fatherName;
+    private int age;
+
+    @Enumerated(EnumType.STRING)
+    private Post post;
+
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    private String password;
+
+    public User(String surName, String firstName, String fatherName, int age, Post post, String email, String password) {
+        this.surName = surName;
+        this.firstName = firstName;
+        this.fatherName = fatherName;
+        this.age = age;
+        this.post = post;
+        this.email = email;
+        this.password = password;
     }
-    protected User(){
+    protected User() {
     }
-    @Column(name = "UserName", length = 50, nullable = false)
-    public String getUsername() {
-        return username;
+    @Column(name = "Surname", length = 100, nullable = false)
+    public String getSurName() {
+        return surName;
     }
-    @Column(name = "Password", length = 50, nullable = false)
+
+    public void setSurName(String surName) {
+        this.surName = surName;
+    }
+    @Column(name = "Firstname", length = 100, nullable = false)
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+    @Column(name = "Fathername", length = 100)
+    public String getFatherName() {
+        return fatherName;
+    }
+
+    public void setFatherName(String fatherName) {
+        this.fatherName = fatherName;
+    }
+    @Column(name = "Age", length = 3, nullable = false)
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+    @Column(name = "Post", length = 12, nullable = false)
+    public Post getPost() {
+        return post;
+    }
+
+    public void setPost(Post post) {
+        this.post = post;
+    }
+    @Column(name = "Email", length = 20, nullable = false, unique = true)
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    @Column(name = "Password", length = 20, nullable = false)
     public String getPassword() {
-        return pass;
+        return password;
     }
-    private void setUsername(String username) {
-        this.username = username;
-    }
-    private void setPassword(String pass) {
-        this.pass = pass;
-    }
-    @Override
-    public String toString() {
-        return "User { id=" + id + ", user_name=" + username + ", password=" + pass + " }";
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

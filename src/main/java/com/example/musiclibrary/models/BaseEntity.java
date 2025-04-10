@@ -5,11 +5,11 @@ public abstract class BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    protected int id;
-    public int getId() {
+    protected Long id;
+    public Long getId() {
         return id;
     }
-    protected void setId(int id) {
+    protected void setId(Long id) {
         this.id = id;
     }
 }
