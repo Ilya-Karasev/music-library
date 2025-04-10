@@ -1,90 +1,54 @@
 package com.example.musiclibrary.controllers;
-import com.example.musiclibrary.dtos.ActionDto;
 import com.example.musiclibrary.dtos.UserDto;
-import com.example.musiclibrary.dtos.show.UserShow;
-import com.example.musiclibrary.services.UserService;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import com.example.musiclibrary.models.User;
+import com.example.musiclibrary.services.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.Optional;
+
 @RestController
+@RequestMapping("/users")
 public class UserController {
     private final UserService userService;
-    private final ModelMapper modelMapper;
-    @Autowired
-    public UserController(UserService userService, ModelMapper modelMapper) {
+
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.modelMapper = modelMapper;
     }
-    @GetMapping("/users")
-    public ResponseEntity<List<UserShow>> all() throws InterruptedException {
-        List<UserShow> users = userService.getAllUsers();
-        for (UserShow user : users) {
-            addActions(user);
-            addUserLinks(user);
-        }
-        return ResponseEntity.ok(users);
-    }
-    @PostMapping("/users/add")
-    public ResponseEntity<UserShow> newUser(@RequestBody UserDto newUser) throws InterruptedException {
-        UserDto user = userService.register(newUser);
-        UserShow u = userService.findUser(user.getName()).orElseThrow(() -> new NotFoundException(user.getName()));
-        addActions(u);
-        addUserLinks(u);
-        return ResponseEntity.ok(u);
-    }
-    @GetMapping("/users/info/{name}")
-    public ResponseEntity<UserShow> findUser(@PathVariable String name) throws InterruptedException {
-        UserShow user = userService.findUser(name).orElseThrow(() -> new NotFoundException(name));
-        addUserLinks(user);
-        addActions(user);
-        return ResponseEntity.ok(user);
-    }
-    @PutMapping("/users/edit/{name}")
-    public ResponseEntity<UserShow> editUser(@PathVariable String name, @RequestBody UserDto user) throws InterruptedException {
-        userService.editUser(name, user);
-        UserShow u = userService.findUser(user.getName()).orElseThrow(() -> new NotFoundException(user.getName()));
-        addUserLinks(u);
-        addActions(u);
-        return ResponseEntity.ok(u);
-    }
-    @DeleteMapping("/users/delete/{name}")
-    public Link deleteUser(@PathVariable String name) throws InterruptedException {
-        userService.delete(name);
-        return WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class).all()).withRel("all-users");
 
+    @GetMapping
+    public List<UserDto> getAllUsers() {
+        return userService.getAllUsers();
     }
-    private void addUserLinks(UserShow user) throws InterruptedException {
-        Link selfLink = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class)
-                        .findUser(user.getName()))
-                .withSelfRel();
 
-        Link allUsersLink = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class)
-                        .all())
-                .withRel("all-users");
-        user.add(selfLink);
-        user.add(allUsersLink);
+    @PostMapping
+    public ResponseEntity<User> createUser(@RequestBody User user) {
+        return ResponseEntity.ok(userService.createUser(user));
     }
-    private void addActions(UserShow user) throws InterruptedException {
-        List<ActionDto> actions = new ArrayList<>();
-        ActionDto updateAction = new ActionDto(
-                WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class)
-                        .editUser(user.getName(), modelMapper.map(user, UserDto.class))).withRel("update").toUri().toString(),
-                "PUT",
-                "application/json"
-        );
-        actions.add(updateAction);
-        ActionDto deleteAction = new ActionDto(
-                WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class)
-                        .deleteUser(user.getName())).withRel("delete").toUri().toString(),
-                "DELETE"
-        );
-        actions.add(deleteAction);
-        user.setActions(actions);
+
+    @GetMapping("/login")
+    public ResponseEntity<UserDto> loginUser(@RequestParam String email, @RequestParam String password) {
+        Optional<UserDto> user = userService.getUserByEmailAndPassword(email, password);
+        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<UserDto>> getUsersBySurName(@RequestParam String surName) {
+        List<UserDto> users = userService.getUsersBySurName(surName);
+        return users.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(users);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
+        return (ResponseEntity<User>) userService.updateUser(id, user)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
