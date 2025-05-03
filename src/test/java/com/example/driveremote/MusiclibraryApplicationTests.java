@@ -1,4 +1,4 @@
-package com.example.musiclibrary;
+package com.example.driveremote;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
